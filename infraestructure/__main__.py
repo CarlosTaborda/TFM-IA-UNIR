@@ -89,8 +89,13 @@ gpt_deployment = cognitiveservices.Deployment("gpt-deployment",
         model=cognitiveservices.DeploymentModelArgs(
             format="OpenAI",
             name="gpt-4o", # o gpt-3.5-turbo
+            version="2024-11-20"
             #version="latest"
         )
+    ),
+    sku=cognitiveservices.SkuArgs(
+        name="Standard",
+        capacity=5,
     )
 )
 

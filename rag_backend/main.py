@@ -4,8 +4,8 @@ from pydantic import BaseModel
 from dotenv import load_dotenv
 from langchain_openai import AzureChatOpenAI, AzureOpenAIEmbeddings
 from langchain_community.vectorstores.azuresearch import AzureSearch
-from langchain.chains import create_retrieval_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
+from langchain_classic.chains import create_retrieval_chain
+from langchain_classic.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 
 # Cargar variables de entorno generadas por claves.py
@@ -14,16 +14,19 @@ load_dotenv()
 app = FastAPI(title="API RAG - Normativa de Tránsito Colombia")
 
 # Configuración de variables (exportadas desde Pulumi y configuradas en .env)
-AZURE_OPENAI_ENDPOINT = os.getenv("AZURE_OPENAI_ENDPOINT")
+AZURE_SEARCH_ENDPOINT = "https://" + os.getenv("AZURE_SEARCH_SERVICE_NAME") + ".search.windows.net"
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
-AZURE_SEARCH_ENDPOINT = os.getenv("AZURE_SEARCH_SERVICE_ENDPOINT")
 AZURE_SEARCH_KEY = os.getenv("AZURE_SEARCH_ADMIN_KEY")
 INDEX_NAME = os.getenv("AZURE_SEARCH_INDEX", "normativa-transito-index")
-EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_NAME")
+AZURE_OPENAI_EMBEDDING_NAME = os.getenv("AZURE_OPENAI_EMBEDDING_NAME")
+AZURE_OPENAI_ENDPOINT = "https://" + os.getenv("AZURE_OPENAI_ACCOUNT_NAME") + ".openai.azure.com"
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 
 # 1. Inicializar Embeddings
 embeddings = AzureOpenAIEmbeddings(
-    azure_deployment=EMBEDDING_DEPLOYMENT,
+    azure_deployment=AZURE_OPENAI_EMBEDDING_NAME,
+    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+    api_key=AZURE_OPENAI_API_KEY,
     openai_api_version="2023-05-15",
 )
 
@@ -34,14 +37,17 @@ vector_store = AzureSearch(
     index_name=INDEX_NAME,
     embedding_function=embeddings.embed_query,
 )
+
 # Configurar el retriever híbrido (texto + vectores)
-retriever = vector_store.as_retriever(search_type="hybrid", search_kwargs={"k": 4})
+retriever = vector_store.as_retriever(search_type="hybrid", k=4)
 
 # 3. Inicializar LLM Generativo
 llm = AzureChatOpenAI(
     azure_deployment="gpt-4o",
-    openai_api_version="2024-05-13",
-    temperature=0.1 # Temperatura baja para respuestas técnicas y precisas
+    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+    api_key=AZURE_OPENAI_API_KEY,
+    openai_api_version="2024-12-01-preview",
+    temperature=0.1
 )
 
 # 4. Definir el Prompt para garantizar trazabilidad
