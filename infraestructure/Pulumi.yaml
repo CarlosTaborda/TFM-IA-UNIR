@@ -1,0 +1,13 @@
+name: rag-transito-tfm
+description: | 
+  Proyecto que despliega la infraestructura de la aplicacion tipo
+  RAG (Retrieval-Augmented Generation) para el TFM de Felipe.
+runtime:
+  name: python
+  options:
+    toolchain: pip
+    virtualenv: .venv
+config:
+  pulumi:tags:
+    value:
+      pulumi:template: azure-python

@@ -1,0 +1,61 @@
+# ==========================================
+# Archivos de entorno y credenciales (CRÍTICO)
+# ==========================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+
+# ==========================================
+# Entornos virtuales de Python
+# ==========================================
+.venv/
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+
+# ==========================================
+# Bytecode y caché de Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# ==========================================
+# Paquetes, binarios e instaladores del sistema
+# ==========================================
+*.deb
+*.rpm
+*.tar.gz
+*.zip
+*.log
+
+# ==========================================
+# Archivos del editor / IDE
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# ==========================================
+# Pulumi & Cloud
+# ==========================================
+# Pulumi almacena estado/locks temporales o backups de stacks
+.pulumi/
