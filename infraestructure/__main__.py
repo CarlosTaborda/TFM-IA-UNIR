@@ -16,6 +16,7 @@ FUNCTION_APP_NAME = os.getenv("AZURE_FUNCTION_APP_NAME", "func-transito-ingesta"
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_SEARCH_ADMIN_KEY = os.getenv("AZURE_SEARCH_ADMIN_KEY")
 AZURE_OPENAI_EMBEDDING_NAME = os.getenv("AZURE_OPENAI_EMBEDDING_NAME")
+AZURE_STORAGE_CONTAINER_NAME = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
 
 # 1. Grupo de Recursos
 resource_group = resources.ResourceGroup("tfm-rag-rg",
@@ -33,7 +34,7 @@ storage_account = storage.StorageAccount("sttransito",
 blob_container = storage.BlobContainer("docs-container",
     resource_group_name=resource_group.name,
     account_name=storage_account.name,
-    container_name="normativa-pdfs"
+    container_name=AZURE_STORAGE_CONTAINER_NAME
 )
 
 storage_keys = storage.list_storage_account_keys_output(
@@ -134,28 +135,6 @@ backend_app = web.WebApp("app-backend-fastapi",
     )
 )
 
-# 6. Azure Function App: procesa cada PDF nuevo mediante Blob Trigger.
-# function_app = web.WebApp("function-app-ingesta",
-#     resource_group_name=resource_group.name,
-#     name=FUNCTION_APP_NAME,
-#     server_farm_id=app_service_plan.id,
-#     kind="functionapp,linux",
-#     site_config=web.SiteConfigArgs(
-#         linux_fx_version="PYTHON|3.12",
-#         app_settings=[
-#             web.NameValuePairArgs(name="FUNCTIONS_EXTENSION_VERSION", value="~4"),
-#             web.NameValuePairArgs(name="FUNCTIONS_WORKER_RUNTIME", value="python"),
-#             web.NameValuePairArgs(name="AzureWebJobsStorage", value=storage_connection_string),
-#             web.NameValuePairArgs(name="BLOB_STORAGE_CONNECTION", value=storage_connection_string),
-#             web.NameValuePairArgs(name="AZURE_OPENAI_ENDPOINT", value=openai_account.properties.endpoint),
-#             web.NameValuePairArgs(name="AZURE_OPENAI_API_KEY", value=AZURE_OPENAI_API_KEY),
-#             web.NameValuePairArgs(name="AZURE_OPENAI_EMBEDDING_DEPLOYMENT", value="text-embedding-ada-002"),
-#             web.NameValuePairArgs(name="AZURE_SEARCH_SERVICE_ENDPOINT", value=pulumi.Output.concat("https://", search_service.name, ".search.windows.net")),
-#             web.NameValuePairArgs(name="AZURE_SEARCH_ADMIN_KEY", value=AZURE_SEARCH_ADMIN_KEY),
-#             web.NameValuePairArgs(name="AZURE_SEARCH_INDEX", value="normativa-transito-index"),
-#         ],
-#     ),
-# )
 
 # Exportar variables críticas para el archivo .env del backend FastAPI
 pulumi.export("openai_endpoint", openai_account.properties.endpoint)
