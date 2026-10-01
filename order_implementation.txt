@@ -1,0 +1,26 @@
+Orden de implementación
+Exporta/guarda el esquema actual del índice.
+
+Detén temporalmente el Blob Trigger para no crear más chunks manuales.
+
+Vacía o crea un índice nuevo de pruebas, por ejemplo normativa-transito-index-v2.
+
+Crea el data source de Blob.
+
+Crea el índice vectorial con content_vector y campos de metadatos.
+
+Implementa primero SplitSkill + AzureOpenAIEmbeddingSkill.
+
+Añade indexProjections.
+
+Crea el indexer y ejecútalo sobre uno o dos PDFs.
+
+Inspecciona resultados en Search Explorer: contenido, title, source_path, parent_id.
+
+Ajusta tamaño/solapamiento de chunks y reindexa.
+
+Si los PDFs legales pierden estructura, reemplaza o precede SplitSkill con Document Layout skill.
+
+Solo después cambia tu backend RAG para consultar el índice nuevo.
+
+Cuando las pruebas sean correctas, elimina el pipeline manual de la Function y apunta producción al índice nuevo.

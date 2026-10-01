@@ -65,27 +65,57 @@ def set_api_keys():
 
 
 def set_resource_names():
-    letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+    letras = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".lower()
     resultado = "".join(random.choice(letras) for _ in range(2))
 
     ENV_FILE = Path(__file__).resolve().parent / ".env"
 
 
-    set_key(str(ENV_FILE), "AZURE_STORAGE_ACCOUNT_NAME", "stnormativatransitoX" + resultado, quote_mode="never")
-    set_key(str(ENV_FILE), "AZURE_OPENAI_ACCOUNT_NAME", "oai-transitocolX" + resultado, quote_mode="never")
-    set_key(str(ENV_FILE), "AZURE_OPENAI_ENDPOINT", "https://oai-transitocolX" + resultado + ".openai.azure.com/", quote_mode="never")
-    set_key(str(ENV_FILE), "AZURE_SEARCH_SERVICE_NAME", "search-movilidad-colX" + resultado, quote_mode="never")
+    set_key(str(ENV_FILE), "AZURE_STORAGE_ACCOUNT_NAME", "stnormatransitox" + resultado, quote_mode="never")
+    set_key(str(ENV_FILE), "AZURE_OPENAI_ACCOUNT_NAME", "oai-transitocolx" + resultado, quote_mode="never")
+    set_key(str(ENV_FILE), "AZURE_OPENAI_ENDPOINT", "https://oai-transitocolx" + resultado + ".openai.azure.com/", quote_mode="never")
+    set_key(str(ENV_FILE), "AZURE_SEARCH_SERVICE_NAME", "search-movilidad-colx" + resultado, quote_mode="never")
+
+def test_remote_endpoint():
+    result = subprocess.run(
+        "curl -X POST \"https://app-transito-api.azurewebsites.net/chat\"   -H \"Content-Type: application/json\"   -H \"X-App-Api-Key: "+os.getenv("APP_API_KEY")+"\"   -d '{"
+        "\"pregunta\": \"¿Cuál es la sanción por no usar cinturón de seguridad?\","
+        "\"chat_id\": \"test-chat-001\""
+        "}'",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+    print("remote endpoint: " + result.stdout)
+
+def test_local_endpoint():
+    result = subprocess.run(
+        "curl -X POST \"http://localhost:8000/chat\"   -H \"Content-Type: application/json\"   -H \"X-App-Api-Key: "+os.getenv("APP_API_KEY")+"\"   -d '{"
+        "\"pregunta\": \"¿Cuál es la sanción por no usar cinturón de seguridad?\","
+        "\"chat_id\": \"test-chat-001\""
+        "}'",
+        shell=True,
+        capture_output=True,
+        text=True
+    )
+    print("local endpoint: " + result.stdout)
 
 def main() -> None:
 
     opcion = int(input('''Introduce un número: 
     1. Establecer nombres de recursos
     2. Configurar claves API
+    3. Probar endpoint remoto
+    4. Probar endpoint local
 '''))
     if opcion == 1:
         set_resource_names()
     elif opcion == 2:
         set_api_keys()
+    elif opcion == 3:
+        test_remote_endpoint()
+    elif opcion == 4:
+        test_local_endpoint()
     
 
 

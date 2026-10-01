@@ -107,7 +107,7 @@ Archivo principal:
 
 ## Variables de entorno
 
-El proyecto usa un archivo .env con las credenciales y nombres de recursos de Azure. Algunas de las variables clave son:
+El proyecto usa un archivo .env en la raíz con las credenciales y nombres de recursos de Azure. Algunas de las variables clave son:
 
 - RESOURCE_GROUP_NAME
 - AZURE_STORAGE_ACCOUNT_NAME
@@ -122,6 +122,13 @@ El proyecto usa un archivo .env con las credenciales y nombres de recursos de Az
 - AZURE_OPENAI_EMBEDDING_NAME
 
 Estas se generan normalmente con [claves.py](claves.py) y se utilizan por la infraestructura, los scripts de indexación y el backend.
+
+Adicionalmente, para conectar la aplicación móvil, **se debe modificar el archivo `.env` de la carpeta `app`** con estas variables específicas:
+
+```env
+AZURE_APP_BACKEND_URL=
+APP_API_KEY=
+```
 
 ---
 
@@ -236,6 +243,18 @@ Ejemplo de payload:
 }
 ```
 
+### 6. Correr el proyecto (Aplicación Móvil)
+
+Una vez que el backend esté desplegado, puedes probar el frontend de la aplicación. Asegúrate primero de haber modificado el archivo `.env` dentro de la carpeta `app` tal y como se indicó en las variables de entorno.<br>
+
+Desde la raíz del proyecto, ejecuta:
+
+```bash
+cd app
+flutter pub get
+flutter run
+```
+
 ---
 
 ## Flujo de uso típico
@@ -252,7 +271,6 @@ Ejemplo de payload:
 ## Buenas prácticas recomendadas
 
 - Mantén una carpeta [corpus](corpus) ordenada y con documentos reales.
-- Revisa el archivo [order_implementation.txt](order_implementation.txt) antes de desplegar cambios importantes.
 - Ajusta el tamaño y solapamiento de chunks si el contenido legal se fragmenta en partes poco útiles.
 - Verifica el índice y el skillset en Azure AI Search antes de cambiar el backend productivo.
 - Evita mezclar documentos no relacionados con la temática de tránsito y normativa.

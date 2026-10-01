@@ -2,7 +2,7 @@ import os
 
 import pulumi
 from dotenv import load_dotenv
-from pulumi_azure_native import resources, cognitiveservices, search, web, storage
+from pulumi_azure_native import resources, cognitiveservices, search, web, storage, containerregistry
 import pulumi_azure_native as azure_native
 
 load_dotenv()
@@ -17,6 +17,9 @@ AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_SEARCH_ADMIN_KEY = os.getenv("AZURE_SEARCH_ADMIN_KEY")
 AZURE_OPENAI_EMBEDDING_NAME = os.getenv("AZURE_OPENAI_EMBEDDING_NAME")
 AZURE_STORAGE_CONTAINER_NAME = os.getenv("AZURE_STORAGE_CONTAINER_NAME")
+AZURE_APP_BACKEND_URL = os.getenv("AZURE_APP_BACKEND_URL")
+APP_API_KEY = os.getenv("APP_API_KEY")
+AZURE_ACR_NAME = os.getenv("AZURE_ACR_NAME")
 
 # 1. Grupo de Recursos
 resource_group = resources.ResourceGroup("tfm-rag-rg",
@@ -123,21 +126,43 @@ app_service_plan = web.AppServicePlan("asp-backend",
 
 backend_app = web.WebApp("app-backend-fastapi",
     resource_group_name=resource_group.name,
-    name="app-backend-transito-api",
+    name=AZURE_APP_BACKEND_URL,
     server_farm_id=app_service_plan.id,
     site_config=web.SiteConfigArgs(
         linux_fx_version="PYTHON|3.12", # Entorno Python para FastAPI
-        app_settings=[
-            web.NameValuePairArgs(name="AZURE_OPENAI_ENDPOINT", value=openai_account.properties.endpoint),
-            web.NameValuePairArgs(name="AZURE_SEARCH_SERVICE_ENDPOINT", value=pulumi.Output.concat("https://", search_service.name, ".search.windows.net")),
-            web.NameValuePairArgs(name="AZURE_SEARCH_INDEX", value="normativa-transito-index"),
-        ]
+        always_on=True,
+        # Instala requirements.txt durante el despliegue y arranca con gunicorn+uvicorn
+        # app_command_line=(
+        #     "gunicorn -w 2 -k uvicorn.workers.UvicornWorker "
+        #     "--timeout 600 --bind 0.0.0.0:8000 main:app"
+        # ),
+        # app_settings=[
+        #     #web.NameValuePairArgs(name="SCM_DO_BUILD_DURING_DEPLOYMENT", value="true"),
+        #     web.NameValuePairArgs(name="AZURE_OPENAI_ACCOUNT_NAME", value=AI_ACCOUNT_NAME),
+        #     web.NameValuePairArgs(name="AZURE_OPENAI_API_KEY", value=AZURE_OPENAI_API_KEY),
+        #     web.NameValuePairArgs(name="AZURE_OPENAI_EMBEDDING_NAME", value=AZURE_OPENAI_EMBEDDING_NAME),
+        #     web.NameValuePairArgs(name="AZURE_SEARCH_SERVICE_NAME", value=SEARCH_SERVICE_NAME),
+        #     web.NameValuePairArgs(name="AZURE_SEARCH_ADMIN_KEY", value=AZURE_SEARCH_ADMIN_KEY),
+        #     web.NameValuePairArgs(name="AZURE_SEARCH_INDEX", value="normativa-transito-index"),
+        #     web.NameValuePairArgs(name="APP_API_KEY", value=APP_API_KEY),
+        # ]
     )
 )
+
+# 6. Azure Container Registry (ACR) para alojar las imágenes Docker del backend
+acr = containerregistry.Registry("acr-transito",
+    resource_group_name=resource_group.name,
+    registry_name=AZURE_ACR_NAME,  # Debe ser un nombre único globalmente (solo letras y números)
+    sku=containerregistry.SkuArgs(
+        name=containerregistry.SkuName.BASIC,
+    ),
+    admin_user_enabled=True,  # Habilita el usuario administrador para facilitar la autenticación
+)
+
 
 
 # Exportar variables críticas para el archivo .env del backend FastAPI
 pulumi.export("openai_endpoint", openai_account.properties.endpoint)
 pulumi.export("search_service_name", search_service.name)
 pulumi.export("backend_url", backend_app.default_host_name)
-#pulumi.export("function_app_name", function_app.name)
+pulumi.export("acr_login_server", acr.login_server)
